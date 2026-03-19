@@ -2,8 +2,9 @@
 	const { __ } = wp.i18n;
 	const { registerBlockType } = wp.blocks;
 	const { BlockControls, InspectorControls, AlignmentToolbar, useBlockProps } = wp.blockEditor;
-	const { PanelBody, SelectControl, Notice } = wp.components;
+	const { PanelBody, SelectControl, TextControl, Notice } = wp.components;
 	const { useEffect } = wp.element;
+	const MAX_BUTTON_TEXT_LENGTH = 32;
 
 	const variationClassMap = {
 		default: 'is-design-default',
@@ -24,7 +25,7 @@
 	registerBlockType('nexdine/vapi-agent-trigger', {
 		edit: function Edit(props) {
 			const { attributes, setAttributes } = props;
-			const { assistantId, designVariation, horizontalAlign } = attributes;
+			const { assistantId, buttonText, designVariation, horizontalAlign } = attributes;
 			const blockData = window.nexdineVapiBlockData || {};
 			const agents = Array.isArray(blockData.agents) ? blockData.agents : [];
 			const defaultAssistantId = blockData.defaultAssistantId || '';
@@ -51,6 +52,9 @@
 			const selectedAgent = agents.find(function getSelected(agent) {
 				return agent && agent.id === assistantId;
 			});
+
+			const resolvedButtonText = (buttonText || '').trim() || __('Talk To Host', 'nexdine');
+			const textLength = (buttonText || '').length;
 
 			const selectOptions = [
 				{ label: __('Select an agent', 'nexdine'), value: '' },
@@ -97,6 +101,18 @@
 					wp.element.createElement(
 						InspectorControls,
 						null,
+						wp.element.createElement(
+							PanelBody,
+							{ title: __('Content', 'nexdine'), initialOpen: false },
+							wp.element.createElement(TextControl, {
+								label: __('Button Text', 'nexdine'),
+								value: buttonText || '',
+								onChange: function onButtonTextChange(value) {
+									setAttributes({ buttonText: value.slice(0, MAX_BUTTON_TEXT_LENGTH) });
+								},
+								help: __('Updates only the trigger button label. ' + (textLength > MAX_BUTTON_TEXT_LENGTH ? MAX_BUTTON_TEXT_LENGTH : textLength) + '/' + MAX_BUTTON_TEXT_LENGTH, 'nexdine'),
+							})
+						),
 						wp.element.createElement(
 							PanelBody,
 							{ title: __('Design Style', 'nexdine'), initialOpen: false },
@@ -160,7 +176,7 @@
 								wp.element.createElement(
 									'button',
 									{ type: 'button', className: 'nexdine-vapi-agent-trigger__button is-online' },
-									__('Talk To Host', 'nexdine')
+									resolvedButtonText
 								),
 								wp.element.createElement(
 									'button',

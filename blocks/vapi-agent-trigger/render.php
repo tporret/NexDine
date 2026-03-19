@@ -53,6 +53,17 @@ if ($assistant_id === '') {
 
 $api_key = $configured_public_key;
 $button_text = sanitize_text_field($attributes['buttonText']);
+
+if (function_exists('mb_substr')) {
+	$button_text = mb_substr($button_text, 0, 32);
+} else {
+	$button_text = substr($button_text, 0, 32);
+}
+
+if ($button_text === '') {
+	$button_text = __('Talk To Host', 'nexdine');
+}
+
 $primary_color = '#0d9488';
 $mode = 'voice';
 $allowed_variations = array('default', 'elevation-high', 'tonal', 'outlined', 'glassmorphism', 'minimalist', 'neumorphic');

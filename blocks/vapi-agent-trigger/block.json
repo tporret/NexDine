@@ -13,6 +13,10 @@
       "type": "string",
       "default": ""
     },
+    "buttonText": {
+      "type": "string",
+      "default": "Talk To Host"
+    },
     "designVariation": {
       "type": "string",
       "default": "default"
