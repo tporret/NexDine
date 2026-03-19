@@ -1,1 +1,33 @@
 /* Admin styles for NexDine plugin. */
+
+.nexdine-settings-wrap .nexdine-status {
+	border-left: 4px solid #2271b1;
+	margin: 12px 0 20px;
+	padding: 10px 12px;
+	background: #f6f7f7;
+}
+
+.nexdine-settings-wrap .nexdine-status.is-connected {
+	border-left-color: #00a32a;
+}
+
+.nexdine-settings-wrap .nexdine-status.is-not-connected {
+	border-left-color: #d63638;
+}
+
+.nexdine-settings-wrap #nexdine-test-vapi-result {
+	margin-top: 10px;
+	font-weight: 600;
+}
+
+.nexdine-settings-wrap #nexdine-test-vapi-result.is-success {
+	color: #00a32a;
+}
+
+.nexdine-settings-wrap #nexdine-test-vapi-result.is-error {
+	color: #b32d2e;
+}
+
+.nexdine-settings-wrap #nexdine-test-vapi-result.is-pending {
+	color: #2271b1;
+}
