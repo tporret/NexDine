@@ -1,0 +1,22 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "nexdine/vapi-chat-widget",
+  "version": "0.1.0",
+  "title": "Vapi Chat Widget",
+  "category": "widgets",
+  "icon": "format-chat",
+  "description": "Embeds the Vapi chat widget with configurable assistant and public key.",
+  "textdomain": "nexdine",
+  "attributes": {
+    "assistantId": {
+      "type": "string",
+      "default": ""
+    }
+  },
+  "supports": {
+    "html": false
+  },
+  "editorScript": "file:./build/index.js",
+  "render": "file:./render.php"
+}

@@ -35,14 +35,83 @@ class NexDine {
 
     private function define_block_hooks() {
         $this->loader->add_action('init', $this, 'register_blocks');
+        $this->loader->add_action('rest_api_init', $this, 'register_rest_routes');
         $this->loader->add_action('enqueue_block_editor_assets', $this, 'enqueue_block_editor_data');
+    }
+
+    public function register_rest_routes() {
+        register_rest_route(
+            'nexdine/v1',
+            '/vapi-assistants',
+            array(
+                'methods' => WP_REST_Server::READABLE,
+                'callback' => array($this, 'rest_get_vapi_assistants'),
+                'permission_callback' => '__return_true',
+            )
+        );
+    }
+
+    public function rest_get_vapi_assistants($request) {
+        $settings = $this->get_vapi_settings();
+        $encrypted_private_key = isset($settings['private_key']) ? (string) $settings['private_key'] : '';
+        $private_key = trim($this->decrypt_secret($encrypted_private_key));
+
+        if ($private_key === '') {
+            return new WP_Error(
+                'nexdine_missing_private_key',
+                __('Missing Vapi private key.', 'nexdine'),
+                array('status' => 400)
+            );
+        }
+
+        $response = wp_remote_get(
+            'https://api.vapi.ai/assistant?limit=100',
+            array(
+                'timeout' => 20,
+                'headers' => array(
+                    'Authorization' => 'Bearer ' . $private_key,
+                    'Accept' => 'application/json',
+                ),
+            )
+        );
+
+        if (is_wp_error($response)) {
+            return new WP_Error(
+                'nexdine_vapi_request_failed',
+                $response->get_error_message(),
+                array('status' => 502)
+            );
+        }
+
+        $status_code = wp_remote_retrieve_response_code($response);
+        $body = wp_remote_retrieve_body($response);
+        $decoded = json_decode($body, true);
+
+        if ($status_code < 200 || $status_code >= 300) {
+            return new WP_Error(
+                'nexdine_vapi_response_error',
+                $this->extract_vapi_error_message($decoded),
+                array('status' => $status_code > 0 ? $status_code : 500)
+            );
+        }
+
+        return rest_ensure_response(
+            array(
+                'assistants' => $this->normalize_agents_for_editor($this->extract_agents_from_response($decoded)),
+            )
+        );
     }
 
     public function register_blocks() {
         $vapi_block_path = NEXDINE_PLUGIN_PATH . 'blocks/vapi-agent-trigger';
+        $vapi_chat_widget_block_path = NEXDINE_PLUGIN_PATH . 'blocks/vapi-chat-widget';
 
         if (file_exists($vapi_block_path . '/block.json')) {
             register_block_type($vapi_block_path);
+        }
+
+        if (file_exists($vapi_chat_widget_block_path . '/block.json')) {
+            register_block_type($vapi_chat_widget_block_path);
         }
     }
 
@@ -50,6 +119,14 @@ class NexDine {
         if (!current_user_can('edit_posts')) {
             return;
         }
+
+        $settings = $this->get_vapi_settings();
+
+        $this->enqueue_agent_trigger_editor_data($settings);
+        $this->enqueue_chat_widget_editor_data($settings);
+    }
+
+    private function enqueue_agent_trigger_editor_data($settings) {
 
         $editor_script_handle = 'nexdine-vapi-agent-trigger-editor-script';
 
@@ -93,6 +170,39 @@ class NexDine {
         wp_add_inline_script(
             $editor_script_handle,
             'window.nexdineVapiBlockData = ' . $json_data . ';',
+            'before'
+        );
+    }
+
+    private function enqueue_chat_widget_editor_data($settings) {
+        $editor_script_handle = 'nexdine-vapi-chat-widget-editor-script';
+
+        if (!wp_script_is($editor_script_handle, 'registered')) {
+            return;
+        }
+
+        $public_key = isset($settings['public_key']) ? sanitize_text_field($settings['public_key']) : '';
+        $default_assistant_id = isset($settings['assistant_id']) ? sanitize_text_field($settings['assistant_id']) : '';
+
+        $data = array(
+            'defaultPublicKey' => $public_key,
+            'defaultAssistantId' => $default_assistant_id,
+            'message' => '',
+        );
+
+        if ($public_key === '') {
+            $data['message'] = __('Vapi public key is missing. Ask an admin to configure NexDine Vapi Settings.', 'nexdine');
+        }
+
+        $json_data = wp_json_encode($data);
+
+        if (!$json_data) {
+            return;
+        }
+
+        wp_add_inline_script(
+            $editor_script_handle,
+            'window.nexdineVapiChatWidgetData = ' . $json_data . ';',
             'before'
         );
     }
