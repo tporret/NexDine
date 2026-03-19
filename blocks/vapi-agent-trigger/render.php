@@ -35,6 +35,7 @@ if (!empty($settings['assistant_ids'])) {
 $defaults = array(
 	'assistantId' => '',
 	'buttonText' => __('Talk To Host', 'nexdine'),
+	'designVariation' => 'default',
 );
 
 $attributes = wp_parse_args((array) $attributes, $defaults);
@@ -53,10 +54,18 @@ $api_key = $configured_public_key;
 $button_text = sanitize_text_field($attributes['buttonText']);
 $primary_color = '#0d9488';
 $mode = 'voice';
+$allowed_variations = array('default', 'elevation-high', 'tonal', 'outlined', 'glassmorphism', 'minimalist', 'neumorphic');
+$design_variation = sanitize_key((string) $attributes['designVariation']);
+
+if (!in_array($design_variation, $allowed_variations, true)) {
+	$design_variation = 'default';
+}
+
+$design_class = 'is-design-' . $design_variation;
 
 $wrapper_attributes = get_block_wrapper_attributes(
 	array(
-		'class' => 'nexdine-vapi-agent-trigger',
+		'class' => 'nexdine-vapi-agent-trigger ' . $design_class,
 		'style' => sprintf('--nexdine-primary:%s;', esc_attr($primary_color)),
 	)
 );

@@ -1,41 +1,115 @@
 .nexdine-vapi-agent-trigger {
-  --nexdine-primary: #0d9488;
+  --nexdine-primary: #6750a4;
+  --md-sys-color-primary: #6750a4;
+  --md-sys-color-on-primary: #ffffff;
+  --md-sys-color-surface: #fffbfe;
+  --md-sys-color-on-surface: #1d1b20;
+  --md-sys-color-surface-variant: #e7e0ec;
+  --md-sys-color-on-surface-variant: #49454f;
+  --md-sys-color-outline: #79747e;
+  --md-sys-color-error: #b3261e;
+  --md-sys-color-on-error: #ffffff;
+  --md-elevation-1: 0 1px 2px rgba(0, 0, 0, 0.3), 0 1px 3px 1px rgba(0, 0, 0, 0.15);
+  --md-elevation-3: 0 4px 8px 3px rgba(0, 0, 0, 0.15), 0 1px 3px rgba(0, 0, 0, 0.3);
+  --md-elevation-5: 0 8px 12px 6px rgba(0, 0, 0, 0.15), 0 4px 4px rgba(0, 0, 0, 0.3);
+  --m3-density-preview-padding: 1.25rem;
+  --m3-density-preview-radius: 20px;
+  --m3-density-preview-gap: 0.875rem;
+  --m3-density-title-size: 1rem;
+  --m3-density-title-margin: 0.625rem;
+  --m3-density-subtitle-size: 0.875rem;
+  --m3-density-subtitle-margin: 0.875rem;
+  --m3-density-control-gap: 0.75rem;
+  --m3-density-button-min-height: 44px;
+  --m3-density-button-padding-y: 0.7rem;
+  --m3-density-button-padding-x: 1.2rem;
+  background: var(--md-sys-color-surface);
+  border-radius: 28px;
+  color: var(--md-sys-color-on-surface);
+  font-family: Roboto, "Noto Sans", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  line-height: 1.5;
+  padding: 1rem;
+}
+
+.nexdine-vapi-agent-trigger .nexdine-vapi-agent-trigger__editor-preview {
+  background: var(--md-sys-color-surface);
+  border: 1px solid var(--md-sys-color-outline);
+  border-radius: var(--m3-density-preview-radius);
+  box-shadow: var(--md-elevation-1);
+  padding: var(--m3-density-preview-padding);
+}
+
+.nexdine-vapi-agent-trigger .nexdine-vapi-agent-trigger__title {
+  color: var(--md-sys-color-on-surface);
+  font-size: var(--m3-density-title-size);
+  font-weight: 500;
+  letter-spacing: 0.009375em;
+  line-height: 1.5;
+  margin: 0 0 var(--m3-density-title-margin);
+}
+
+.nexdine-vapi-agent-trigger .nexdine-vapi-agent-trigger__subtitle {
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: var(--m3-density-subtitle-size);
+  line-height: 1.4;
+  margin: 0 0 var(--m3-density-subtitle-margin);
 }
 
 .nexdine-vapi-agent-trigger .nexdine-vapi-agent-trigger__controls {
   align-items: center;
   display: flex;
   flex-wrap: wrap;
-  gap: 0.75rem;
+  gap: var(--m3-density-control-gap);
+}
+
+.nexdine-vapi-agent-trigger .nexdine-vapi-agent-trigger__button,
+.nexdine-vapi-agent-trigger .nexdine-vapi-agent-trigger__end-button {
+  appearance: none;
+  border-radius: 24px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 500;
+  line-height: 1.25;
+  min-height: var(--m3-density-button-min-height);
+  overflow: hidden;
+  padding: var(--m3-density-button-padding-y) var(--m3-density-button-padding-x);
+  position: relative;
+  transition: box-shadow 0.2s ease, transform 0.2s ease, background-color 0.2s ease, opacity 0.2s ease;
+}
+
+.nexdine-vapi-agent-trigger .nexdine-vapi-agent-trigger__button::after,
+.nexdine-vapi-agent-trigger .nexdine-vapi-agent-trigger__end-button::after {
+  background: currentcolor;
+  content: "";
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  position: absolute;
+  transition: opacity 0.2s ease;
+}
+
+.nexdine-vapi-agent-trigger .nexdine-vapi-agent-trigger__button:hover::after,
+.nexdine-vapi-agent-trigger .nexdine-vapi-agent-trigger__end-button:hover::after {
+  opacity: 0.08;
+}
+
+.nexdine-vapi-agent-trigger .nexdine-vapi-agent-trigger__button:active::after,
+.nexdine-vapi-agent-trigger .nexdine-vapi-agent-trigger__end-button:active::after {
+  opacity: 0.12;
+}
+
+.nexdine-vapi-agent-trigger .nexdine-vapi-agent-trigger__button:focus-visible,
+.nexdine-vapi-agent-trigger .nexdine-vapi-agent-trigger__end-button:focus-visible {
+  outline: 3px solid rgba(103, 80, 164, 0.35);
+  outline-offset: 2px;
 }
 
 .nexdine-vapi-agent-trigger .nexdine-vapi-agent-trigger__button {
-  align-items: center;
-  appearance: none;
-  background: var(--nexdine-primary);
+  background: var(--md-sys-color-primary);
   border: 0;
-  border-radius: 999px;
-  box-shadow: 0 10px 24px rgba(13, 148, 136, 0.22);
-  color: #ffffff;
-  cursor: pointer;
-  display: inline-flex;
-  font-size: 1rem;
-  font-weight: 600;
-  gap: 0.5rem;
-  justify-content: center;
-  line-height: 1.2;
-  min-height: 48px;
-  padding: 0.75rem 1.25rem;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
-}
-
-.nexdine-vapi-agent-trigger .nexdine-vapi-agent-trigger__button:hover {
-  transform: translateY(-1px);
-}
-
-.nexdine-vapi-agent-trigger .nexdine-vapi-agent-trigger__button:focus-visible {
-  outline: 2px solid rgba(15, 23, 42, 0.4);
-  outline-offset: 3px;
+  box-shadow: var(--md-elevation-1);
+  color: var(--md-sys-color-on-primary);
 }
 
 .nexdine-vapi-agent-trigger .nexdine-vapi-agent-trigger__button.is-online {
@@ -50,37 +124,157 @@
 .nexdine-vapi-agent-trigger .nexdine-vapi-agent-trigger__button.is-offline,
 .nexdine-vapi-agent-trigger .nexdine-vapi-agent-trigger__button[aria-disabled='true'] {
   animation: none;
-  background: #64748b;
+  background: #7f7a85;
   box-shadow: none;
+  color: #ffffff;
   cursor: not-allowed;
   opacity: 0.9;
 }
 
 .nexdine-vapi-agent-trigger .nexdine-vapi-agent-trigger__end-button {
-  appearance: none;
-  background: #be123c;
+  background: var(--md-sys-color-error);
   border: 0;
-  border-radius: 999px;
-  color: #ffffff;
-  cursor: pointer;
-  font-size: 0.95rem;
-  font-weight: 600;
-  min-height: 44px;
-  padding: 0.65rem 1rem;
-  transition: background-color 0.2s ease, opacity 0.2s ease;
-}
-
-.nexdine-vapi-agent-trigger .nexdine-vapi-agent-trigger__end-button:hover {
-  background: #9f1239;
-}
-
-.nexdine-vapi-agent-trigger .nexdine-vapi-agent-trigger__end-button:focus-visible {
-  outline: 2px solid rgba(15, 23, 42, 0.4);
-  outline-offset: 3px;
+  box-shadow: var(--md-elevation-1);
+  color: var(--md-sys-color-on-error);
 }
 
 .nexdine-vapi-agent-trigger .nexdine-vapi-agent-trigger__end-button.is-hidden {
   display: none;
+}
+
+.nexdine-vapi-agent-trigger.is-design-default .nexdine-vapi-agent-trigger__editor-preview {
+  box-shadow: var(--md-elevation-1);
+}
+
+.nexdine-vapi-agent-trigger.is-design-elevation-high .nexdine-vapi-agent-trigger__editor-preview {
+  box-shadow: var(--md-elevation-5);
+}
+
+.nexdine-vapi-agent-trigger.is-design-elevation-high .nexdine-vapi-agent-trigger__button,
+.nexdine-vapi-agent-trigger.is-design-elevation-high .nexdine-vapi-agent-trigger__end-button {
+  box-shadow: var(--md-elevation-5);
+  transform: translateY(-1px);
+}
+
+.nexdine-vapi-agent-trigger.is-design-tonal {
+  --md-sys-color-surface: #f5edf7;
+  --md-sys-color-primary: #7d5260;
+}
+
+.nexdine-vapi-agent-trigger.is-design-tonal .nexdine-vapi-agent-trigger__editor-preview {
+  background: #efe6f4;
+  border-color: #d0c7da;
+}
+
+.nexdine-vapi-agent-trigger.is-design-tonal .nexdine-vapi-agent-trigger__button {
+  background: #d0bcff;
+  color: #381e72;
+}
+
+.nexdine-vapi-agent-trigger.is-design-tonal .nexdine-vapi-agent-trigger__end-button {
+  background: #efb8c8;
+  color: #601410;
+}
+
+.nexdine-vapi-agent-trigger.is-design-outlined {
+  background: #ffffff;
+}
+
+.nexdine-vapi-agent-trigger.is-design-outlined .nexdine-vapi-agent-trigger__editor-preview {
+  box-shadow: none;
+}
+
+.nexdine-vapi-agent-trigger.is-design-outlined .nexdine-vapi-agent-trigger__button,
+.nexdine-vapi-agent-trigger.is-design-outlined .nexdine-vapi-agent-trigger__end-button {
+  background: transparent;
+  border: 1px solid currentcolor;
+  box-shadow: none;
+}
+
+.nexdine-vapi-agent-trigger.is-design-outlined .nexdine-vapi-agent-trigger__button {
+  color: var(--md-sys-color-primary);
+}
+
+.nexdine-vapi-agent-trigger.is-design-outlined .nexdine-vapi-agent-trigger__end-button {
+  color: var(--md-sys-color-error);
+}
+
+.nexdine-vapi-agent-trigger.is-design-glassmorphism {
+  background: linear-gradient(140deg, rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0.15));
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  box-shadow: 0 16px 40px rgba(40, 22, 72, 0.18);
+  backdrop-filter: blur(12px);
+}
+
+.nexdine-vapi-agent-trigger.is-design-glassmorphism .nexdine-vapi-agent-trigger__editor-preview {
+  background: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(14px);
+  border-color: rgba(255, 255, 255, 0.7);
+}
+
+.nexdine-vapi-agent-trigger.is-design-glassmorphism .nexdine-vapi-agent-trigger__button,
+.nexdine-vapi-agent-trigger.is-design-glassmorphism .nexdine-vapi-agent-trigger__end-button {
+  backdrop-filter: blur(6px);
+  box-shadow: 0 8px 18px rgba(22, 20, 31, 0.18);
+}
+
+.nexdine-vapi-agent-trigger.is-design-minimalist {
+  background: #ffffff;
+  padding: 1.5rem;
+}
+
+.nexdine-vapi-agent-trigger.is-design-minimalist .nexdine-vapi-agent-trigger__editor-preview {
+  background: #ffffff;
+  border: 0;
+  box-shadow: none;
+  padding: 0;
+}
+
+.nexdine-vapi-agent-trigger.is-design-minimalist .nexdine-vapi-agent-trigger__title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.nexdine-vapi-agent-trigger.is-design-minimalist .nexdine-vapi-agent-trigger__button,
+.nexdine-vapi-agent-trigger.is-design-minimalist .nexdine-vapi-agent-trigger__end-button {
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+  box-shadow: none;
+  color: #111827;
+  padding: 0.75rem 0;
+}
+
+.nexdine-vapi-agent-trigger.is-design-minimalist .nexdine-vapi-agent-trigger__end-button {
+  color: #b91c1c;
+}
+
+.nexdine-vapi-agent-trigger.is-design-neumorphic {
+  background: #e9edf3;
+}
+
+.nexdine-vapi-agent-trigger.is-design-neumorphic .nexdine-vapi-agent-trigger__editor-preview {
+  background: #e9edf3;
+  border: 0;
+  box-shadow: inset 8px 8px 16px rgba(187, 193, 203, 0.6), inset -8px -8px 16px rgba(255, 255, 255, 0.8);
+}
+
+.nexdine-vapi-agent-trigger.is-design-neumorphic .nexdine-vapi-agent-trigger__button,
+.nexdine-vapi-agent-trigger.is-design-neumorphic .nexdine-vapi-agent-trigger__end-button {
+  background: #e9edf3;
+  border: 0;
+  box-shadow: 8px 8px 16px rgba(181, 190, 202, 0.65), -8px -8px 16px rgba(255, 255, 255, 0.85);
+  color: #334155;
+}
+
+.nexdine-vapi-agent-trigger.is-design-neumorphic .nexdine-vapi-agent-trigger__button:active,
+.nexdine-vapi-agent-trigger.is-design-neumorphic .nexdine-vapi-agent-trigger__end-button:active {
+  box-shadow: inset 6px 6px 12px rgba(181, 190, 202, 0.7), inset -6px -6px 12px rgba(255, 255, 255, 0.85);
+}
+
+.nexdine-vapi-agent-trigger.is-design-neumorphic .nexdine-vapi-agent-trigger__end-button {
+  color: #9f1239;
 }
 
 @keyframes nexdine-agent-pulse {
@@ -98,10 +292,36 @@
 }
 
 @media (max-width: 600px) {
+  .nexdine-vapi-agent-trigger {
+    border-radius: 20px;
+    --m3-density-preview-padding: 1rem;
+    --m3-density-preview-radius: 16px;
+    --m3-density-preview-gap: 0.75rem;
+    --m3-density-title-size: 0.95rem;
+    --m3-density-title-margin: 0.5rem;
+    --m3-density-subtitle-size: 0.8125rem;
+    --m3-density-subtitle-margin: 0.75rem;
+    --m3-density-control-gap: 0.625rem;
+    --m3-density-button-min-height: 40px;
+    --m3-density-button-padding-y: 0.6rem;
+    --m3-density-button-padding-x: 1rem;
+  }
+
   .nexdine-vapi-agent-trigger .nexdine-vapi-agent-trigger__button,
   .nexdine-vapi-agent-trigger .nexdine-vapi-agent-trigger__end-button {
-    font-size: 0.95rem;
-    min-height: 44px;
+    font-size: 0.9rem;
+    min-height: var(--m3-density-button-min-height);
     width: 100%;
+  }
+}
+
+@media (max-width: 782px) {
+  .nexdine-vapi-agent-trigger {
+    --m3-density-preview-padding: 1rem;
+    --m3-density-preview-radius: 16px;
+    --m3-density-title-size: 0.95rem;
+    --m3-density-subtitle-size: 0.8125rem;
+    --m3-density-control-gap: 0.625rem;
+    --m3-density-button-min-height: 40px;
   }
 }

@@ -5,15 +5,26 @@
 	const { PanelBody, SelectControl, Notice } = wp.components;
 	const { useEffect } = wp.element;
 
+	const variationClassMap = {
+		default: 'is-design-default',
+		'elevation-high': 'is-design-elevation-high',
+		tonal: 'is-design-tonal',
+		outlined: 'is-design-outlined',
+		glassmorphism: 'is-design-glassmorphism',
+		minimalist: 'is-design-minimalist',
+		neumorphic: 'is-design-neumorphic',
+	};
+
 	registerBlockType('nexdine/vapi-agent-trigger', {
 		edit: function Edit(props) {
 			const { attributes, setAttributes } = props;
-			const { assistantId } = attributes;
+			const { assistantId, designVariation } = attributes;
 			const blockData = window.nexdineVapiBlockData || {};
 			const agents = Array.isArray(blockData.agents) ? blockData.agents : [];
 			const defaultAssistantId = blockData.defaultAssistantId || '';
 			const message = blockData.message || '';
-			const blockProps = useBlockProps({ className: 'nexdine-vapi-agent-trigger' });
+			const designClass = variationClassMap[designVariation] || variationClassMap.default;
+			const blockProps = useBlockProps({ className: `nexdine-vapi-agent-trigger ${designClass}` });
 
 			useEffect(
 				function setDefaultAgent() {
@@ -29,14 +40,6 @@
 				},
 				[assistantId, defaultAssistantId, agents, setAttributes]
 			);
-
-			const previewStyle = {
-				border: '1px solid #e2e8f0',
-				borderRadius: '12px',
-				padding: '16px',
-				background: '#ffffff',
-				boxShadow: '0 2px 10px rgba(15, 23, 42, 0.05)',
-			};
 
 			const selectedAgent = agents.find(function getSelected(agent) {
 				return agent && agent.id === assistantId;
@@ -75,37 +78,51 @@
 						)
 					),
 					wp.element.createElement(
+						InspectorControls,
+						null,
+						wp.element.createElement(
+							PanelBody,
+							{ title: __('Design Style', 'nexdine'), initialOpen: false },
+							wp.element.createElement(SelectControl, {
+								label: __('Design Variation', 'nexdine'),
+								value: designVariation || 'default',
+								options: [
+									{ label: __('Default (Material 3)', 'nexdine'), value: 'default' },
+									{ label: __('Elevation High', 'nexdine'), value: 'elevation-high' },
+									{ label: __('Tonal', 'nexdine'), value: 'tonal' },
+									{ label: __('Outlined', 'nexdine'), value: 'outlined' },
+									{ label: __('Glassmorphism', 'nexdine'), value: 'glassmorphism' },
+									{ label: __('Minimalist', 'nexdine'), value: 'minimalist' },
+									{ label: __('Neumorphic', 'nexdine'), value: 'neumorphic' },
+								],
+								onChange: function onDesignChange(value) {
+									setAttributes({ designVariation: value || 'default' });
+								},
+								help: __('Choose a visual style for the trigger controls.', 'nexdine'),
+							})
+						)
+					),
+					wp.element.createElement(
 						'div',
 						blockProps,
 						wp.element.createElement(
 							'div',
-							{ style: previewStyle, className: 'tw-rounded-xl tw-border tw-border-slate-200 tw-bg-white tw-p-4' },
+							{ className: 'nexdine-vapi-agent-trigger__editor-preview' },
 							wp.element.createElement(
 								'p',
-								{ style: { marginTop: 0, marginBottom: '8px', fontWeight: 600, color: '#0f172a' } },
+								{ className: 'nexdine-vapi-agent-trigger__title' },
 								__('Vapi Agent Trigger Preview', 'nexdine')
 							),
 							wp.element.createElement(
 								'p',
-								{ style: { marginTop: 0, marginBottom: '12px', color: '#475569', fontSize: '13px' } },
+								{ className: 'nexdine-vapi-agent-trigger__subtitle' },
 								selectedAgent
 									? __('Users will start a voice call with the selected agent.', 'nexdine')
 									: __('Select an agent in the sidebar to activate this block.', 'nexdine')
 							),
 							wp.element.createElement(
 								'button',
-								{
-									type: 'button',
-									style: {
-										backgroundColor: '#0d9488',
-										color: '#ffffff',
-										border: 'none',
-										borderRadius: '999px',
-										padding: '0.75rem 1.25rem',
-										fontWeight: 600,
-										cursor: 'pointer',
-									},
-								},
+								{ type: 'button', className: 'nexdine-vapi-agent-trigger__button is-online' },
 								__('Talk To Host', 'nexdine')
 							),
 							message

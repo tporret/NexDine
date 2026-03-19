@@ -12,6 +12,10 @@
     "assistantId": {
       "type": "string",
       "default": ""
+    },
+    "designVariation": {
+      "type": "string",
+      "default": "default"
     }
   },
   "supports": {
