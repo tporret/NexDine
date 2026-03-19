@@ -10,6 +10,9 @@ class NexDine_Admin {
     private $vapi_option_name;
     private $vapi_settings_group;
     private $vapi_page_slug;
+    private $agents_page_slug;
+    private $agents_cache_key;
+    private $agents_cache_ttl;
     private $encryption_prefix;
 
     public function __construct($plugin_name, $version) {
@@ -18,11 +21,14 @@ class NexDine_Admin {
         $this->vapi_option_name = 'nexdine_vapi_settings';
         $this->vapi_settings_group = 'nexdine_vapi_settings_group';
         $this->vapi_page_slug = 'nexdine-vapi-settings';
+        $this->agents_page_slug = 'nexdine-agents';
+        $this->agents_cache_key = 'nexdine_vapi_agents_cache';
+        $this->agents_cache_ttl = HOUR_IN_SECONDS;
         $this->encryption_prefix = 'nexdine_enc_v1:';
     }
 
     public function enqueue_styles($hook_suffix) {
-        if (!$this->is_vapi_settings_page($hook_suffix)) {
+        if (!$this->is_nexdine_admin_page($hook_suffix)) {
             return;
         }
 
@@ -67,12 +73,198 @@ class NexDine_Admin {
     }
 
     public function add_plugin_admin_menu() {
-        add_options_page(
-            __('NexDine Vapi Settings', 'nexdine'),
-            __('NexDine AI Voice', 'nexdine'),
+        add_menu_page(
+            __('NexDine', 'nexdine'),
+            __('NexDine', 'nexdine'),
+            'manage_options',
+            $this->agents_page_slug,
+            array($this, 'render_agents_page'),
+            'dashicons-microphone',
+            58
+        );
+
+        add_submenu_page(
+            $this->agents_page_slug,
+            __('Agents', 'nexdine'),
+            __('Agents', 'nexdine'),
+            'manage_options',
+            $this->agents_page_slug,
+            array($this, 'render_agents_page')
+        );
+
+        add_submenu_page(
+            $this->agents_page_slug,
+            __('Vapi Settings', 'nexdine'),
+            __('Vapi Settings', 'nexdine'),
             'manage_options',
             $this->vapi_page_slug,
             array($this, 'render_vapi_settings_page')
+        );
+    }
+
+    public function render_agents_page() {
+        if (!current_user_can('manage_options')) {
+            return;
+        }
+
+        $settings = $this->get_vapi_settings();
+        $encrypted_private_key = isset($settings['private_key']) ? $settings['private_key'] : '';
+        $private_key = trim($this->decrypt_secret($encrypted_private_key));
+        $settings_url = admin_url('admin.php?page=' . $this->vapi_page_slug);
+        $refresh_url = wp_nonce_url(
+            add_query_arg(
+                array(
+                    'page' => $this->agents_page_slug,
+                    'nexdine_refresh_agents' => '1',
+                ),
+                admin_url('admin.php')
+            ),
+            'nexdine_refresh_agents'
+        );
+        $agents = array();
+        $api_error = '';
+        $force_refresh = isset($_GET['nexdine_refresh_agents']) && wp_verify_nonce(
+            isset($_GET['_wpnonce']) ? sanitize_text_field(wp_unslash($_GET['_wpnonce'])) : '',
+            'nexdine_refresh_agents'
+        );
+        $cache_used = false;
+
+        if ($private_key === '') {
+            $api_error = __('No Vapi private key is saved yet.', 'nexdine');
+        } else {
+            if (!$force_refresh) {
+                $cached = get_transient($this->agents_cache_key);
+
+                if (is_array($cached)) {
+                    $agents = isset($cached['agents']) && is_array($cached['agents']) ? $cached['agents'] : array();
+                    $api_error = isset($cached['api_error']) && is_string($cached['api_error']) ? $cached['api_error'] : '';
+                    $cache_used = true;
+                }
+            }
+
+            if (!$cache_used || $force_refresh) {
+                $response_data = $this->fetch_vapi_agents($private_key);
+                $agents = isset($response_data['agents']) ? $response_data['agents'] : array();
+                $api_error = isset($response_data['api_error']) ? $response_data['api_error'] : '';
+
+                set_transient(
+                    $this->agents_cache_key,
+                    array(
+                        'agents' => $agents,
+                        'api_error' => $api_error,
+                    ),
+                    $this->agents_cache_ttl
+                );
+            }
+        }
+        ?>
+        <div class="wrap nexdine-settings-wrap">
+            <h1><?php echo esc_html__('NexDine Agents', 'nexdine'); ?></h1>
+            <p><?php echo esc_html__('This page shows live Vapi assistants available to your saved account key.', 'nexdine'); ?></p>
+
+            <p>
+                <a href="<?php echo esc_url($refresh_url); ?>" class="button button-secondary">
+                    <?php echo esc_html__('Refresh Agents', 'nexdine'); ?>
+                </a>
+                <span class="description" style="margin-left:8px;">
+                    <?php echo esc_html__('Agent results are cached for 1 hour.', 'nexdine'); ?>
+                </span>
+            </p>
+
+            <?php if ($force_refresh && $private_key !== '') : ?>
+                <div class="notice notice-success is-dismissible"><p>
+                    <?php echo esc_html__('Agents list refreshed from Vapi.', 'nexdine'); ?>
+                </p></div>
+            <?php endif; ?>
+
+            <?php if ($private_key === '') : ?>
+                <div class="notice notice-warning"><p>
+                    <?php
+                    printf(
+                        esc_html__('To view agents, add your Vapi Private Key in %s.', 'nexdine'),
+                        '<a href="' . esc_url($settings_url) . '">' . esc_html__('Vapi Settings', 'nexdine') . '</a>'
+                    );
+                    ?>
+                </p></div>
+            <?php elseif ($api_error !== '') : ?>
+                <div class="notice notice-error"><p>
+                    <?php
+                    echo esc_html__('We could not load agents from Vapi.', 'nexdine') . ' ' . esc_html($api_error);
+                    ?>
+                </p></div>
+            <?php endif; ?>
+
+            <?php if (!empty($agents)) : ?>
+                <table class="widefat fixed striped" style="max-width: 1100px;">
+                    <thead>
+                        <tr>
+                            <th scope="col"><?php echo esc_html__('Name', 'nexdine'); ?></th>
+                            <th scope="col"><?php echo esc_html__('Assistant ID', 'nexdine'); ?></th>
+                            <th scope="col"><?php echo esc_html__('Created', 'nexdine'); ?></th>
+                            <th scope="col"><?php echo esc_html__('Updated', 'nexdine'); ?></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($agents as $agent) : ?>
+                            <tr>
+                                <td><?php echo esc_html($this->agent_display_value($agent, 'name')); ?></td>
+                                <td><code><?php echo esc_html($this->agent_display_value($agent, 'id')); ?></code></td>
+                                <td><?php echo esc_html($this->format_agent_datetime($this->agent_display_value($agent, 'createdAt'))); ?></td>
+                                <td><?php echo esc_html($this->format_agent_datetime($this->agent_display_value($agent, 'updatedAt'))); ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            <?php else : ?>
+                <div class="notice notice-info"><p>
+                    <?php
+                    if ($private_key === '') {
+                        echo esc_html__('No agents to display yet. Save your Vapi credentials first, then reload this page.', 'nexdine');
+                    } elseif ($api_error !== '') {
+                        echo esc_html__('No agents could be displayed due to an API error. Check your key and try again.', 'nexdine');
+                    } else {
+                        echo esc_html__('No agents were returned by Vapi. Create an assistant in your Vapi dashboard, then refresh this page.', 'nexdine');
+                    }
+                    ?>
+                </p></div>
+            <?php endif; ?>
+        </div>
+        <?php
+    }
+
+    private function fetch_vapi_agents($private_key) {
+        $response = wp_remote_get(
+            'https://api.vapi.ai/assistant?limit=100',
+            array(
+                'timeout' => 20,
+                'headers' => array(
+                    'Authorization' => 'Bearer ' . $private_key,
+                    'Accept' => 'application/json',
+                ),
+            )
+        );
+
+        if (is_wp_error($response)) {
+            return array(
+                'agents' => array(),
+                'api_error' => $response->get_error_message(),
+            );
+        }
+
+        $status_code = wp_remote_retrieve_response_code($response);
+        $body = wp_remote_retrieve_body($response);
+        $decoded = json_decode($body, true);
+
+        if ($status_code >= 200 && $status_code < 300) {
+            return array(
+                'agents' => $this->normalize_agents_response($decoded),
+                'api_error' => '',
+            );
+        }
+
+        return array(
+            'agents' => array(),
+            'api_error' => $this->extract_vapi_error_message($decoded),
         );
     }
 
@@ -116,13 +308,26 @@ class NexDine_Admin {
 
         add_settings_field(
             'assistant_id',
-            __('Assistant ID', 'nexdine'),
+            __('Default Assistant ID', 'nexdine'),
             array($this, 'render_text_field'),
             $this->vapi_page_slug,
             'nexdine_vapi_account_section',
             array(
                 'field_key' => 'assistant_id',
                 'placeholder' => __('asst_xxxxxxxxxxxxxxxxx', 'nexdine'),
+            )
+        );
+
+        add_settings_field(
+            'assistant_ids',
+            __('Additional Assistant IDs', 'nexdine'),
+            array($this, 'render_textarea_field'),
+            $this->vapi_page_slug,
+            'nexdine_vapi_account_section',
+            array(
+                'field_key' => 'assistant_ids',
+                'placeholder' => "asst_xxxxxxxxxxxxxxxxx\nasst_yyyyyyyyyyyyyyyyy",
+                'description' => __('Add one assistant ID per line. These IDs are merged into the block selector.', 'nexdine'),
             )
         );
 
@@ -158,6 +363,7 @@ class NexDine_Admin {
         $sanitized['public_key'] = isset($input['public_key']) ? sanitize_text_field(wp_unslash($input['public_key'])) : '';
         $sanitized['assistant_id'] = isset($input['assistant_id']) ? sanitize_text_field(wp_unslash($input['assistant_id'])) : '';
         $sanitized['phone_number_id'] = isset($input['phone_number_id']) ? sanitize_text_field(wp_unslash($input['phone_number_id'])) : '';
+        $sanitized['assistant_ids'] = $this->sanitize_assistant_ids(isset($input['assistant_ids']) ? wp_unslash($input['assistant_ids']) : '');
 
         $private_key = isset($input['private_key']) ? sanitize_text_field(wp_unslash($input['private_key'])) : '';
         $webhook_secret = isset($input['webhook_secret']) ? sanitize_text_field(wp_unslash($input['webhook_secret'])) : '';
@@ -220,6 +426,54 @@ class NexDine_Admin {
         if ($has_saved_value) {
             echo '<p class="description">' . esc_html__('A value is already saved. Leave blank to keep the current value.', 'nexdine') . '</p>';
         }
+    }
+
+    public function render_textarea_field($args) {
+        $settings = $this->get_vapi_settings();
+        $field_key = $args['field_key'];
+        $placeholder = isset($args['placeholder']) ? $args['placeholder'] : '';
+        $description = isset($args['description']) ? $args['description'] : '';
+        $value = '';
+
+        if (isset($settings[$field_key])) {
+            if (is_array($settings[$field_key])) {
+                $value = implode("\n", $settings[$field_key]);
+            } elseif (is_string($settings[$field_key])) {
+                $value = $settings[$field_key];
+            }
+        }
+
+        printf(
+            '<textarea class="large-text code" rows="6" name="%1$s[%2$s]" placeholder="%3$s">%4$s</textarea>',
+            esc_attr($this->vapi_option_name),
+            esc_attr($field_key),
+            esc_attr($placeholder),
+            esc_textarea($value)
+        );
+
+        if ($description !== '') {
+            echo '<p class="description">' . esc_html($description) . '</p>';
+        }
+    }
+
+    private function sanitize_assistant_ids($value) {
+        if (is_array($value)) {
+            $raw = $value;
+        } else {
+            $raw = preg_split('/[\r\n,]+/', (string) $value);
+        }
+
+        $ids = array();
+
+        foreach ((array) $raw as $item) {
+            $clean = sanitize_text_field(trim((string) $item));
+
+            if ($clean !== '') {
+                $ids[] = $clean;
+            }
+        }
+
+        return array_values(array_unique($ids));
     }
 
     public function render_vapi_settings_page() {
@@ -328,8 +582,81 @@ class NexDine_Admin {
         return is_array($settings) ? $settings : array();
     }
 
+    private function normalize_agents_response($decoded) {
+        if (is_array($decoded)) {
+            if (isset($decoded['results']) && is_array($decoded['results'])) {
+                return $decoded['results'];
+            }
+
+            if (isset($decoded['data']) && is_array($decoded['data'])) {
+                return $decoded['data'];
+            }
+
+            if ($this->is_sequential_array($decoded)) {
+                return $decoded;
+            }
+        }
+
+        return array();
+    }
+
+    private function extract_vapi_error_message($decoded) {
+        $error_message = __('Unexpected response from Vapi.', 'nexdine');
+
+        if (is_array($decoded)) {
+            if (!empty($decoded['message']) && is_string($decoded['message'])) {
+                $error_message = $decoded['message'];
+            } elseif (!empty($decoded['error']) && is_string($decoded['error'])) {
+                $error_message = $decoded['error'];
+            }
+        }
+
+        return $error_message;
+    }
+
+    private function is_sequential_array($value) {
+        if (!is_array($value)) {
+            return false;
+        }
+
+        return array_keys($value) === range(0, count($value) - 1);
+    }
+
+    private function agent_display_value($agent, $key) {
+        if (is_array($agent) && !empty($agent[$key])) {
+            return (string) $agent[$key];
+        }
+
+        return __('N/A', 'nexdine');
+    }
+
+    private function format_agent_datetime($datetime) {
+        if (!is_string($datetime) || $datetime === '' || $datetime === __('N/A', 'nexdine')) {
+            return __('N/A', 'nexdine');
+        }
+
+        $timestamp = strtotime($datetime);
+
+        if ($timestamp === false) {
+            return $datetime;
+        }
+
+        return wp_date(get_option('date_format') . ' ' . get_option('time_format'), $timestamp);
+    }
+
+    private function is_nexdine_admin_page($hook_suffix) {
+        return in_array(
+            $hook_suffix,
+            array(
+                'toplevel_page_' . $this->agents_page_slug,
+                'nexdine_page_' . $this->vapi_page_slug,
+            ),
+            true
+        );
+    }
+
     private function is_vapi_settings_page($hook_suffix) {
-        return $hook_suffix === 'settings_page_' . $this->vapi_page_slug;
+        return $hook_suffix === 'nexdine_page_' . $this->vapi_page_slug;
     }
 
     private function encrypt_secret($plain_text) {
