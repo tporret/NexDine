@@ -60,6 +60,19 @@
   display: flex;
   flex-wrap: wrap;
   gap: var(--m3-density-control-gap);
+  justify-content: flex-start;
+}
+
+.nexdine-vapi-agent-trigger.is-horizontal-left .nexdine-vapi-agent-trigger__controls {
+  justify-content: flex-start;
+}
+
+.nexdine-vapi-agent-trigger.is-horizontal-center .nexdine-vapi-agent-trigger__controls {
+  justify-content: center;
+}
+
+.nexdine-vapi-agent-trigger.is-horizontal-right .nexdine-vapi-agent-trigger__controls {
+  justify-content: flex-end;
 }
 
 .nexdine-vapi-agent-trigger .nexdine-vapi-agent-trigger__button,
@@ -312,6 +325,10 @@
     font-size: 0.9rem;
     min-height: var(--m3-density-button-min-height);
     width: 100%;
+  }
+
+  .nexdine-vapi-agent-trigger .nexdine-vapi-agent-trigger__controls {
+    justify-content: stretch;
   }
 }
 

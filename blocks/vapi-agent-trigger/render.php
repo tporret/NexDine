@@ -36,6 +36,7 @@ $defaults = array(
 	'assistantId' => '',
 	'buttonText' => __('Talk To Host', 'nexdine'),
 	'designVariation' => 'default',
+	'horizontalAlign' => 'left',
 );
 
 $attributes = wp_parse_args((array) $attributes, $defaults);
@@ -63,9 +64,18 @@ if (!in_array($design_variation, $allowed_variations, true)) {
 
 $design_class = 'is-design-' . $design_variation;
 
+$allowed_alignments = array('left', 'center', 'right');
+$horizontal_align = sanitize_key((string) $attributes['horizontalAlign']);
+
+if (!in_array($horizontal_align, $allowed_alignments, true)) {
+	$horizontal_align = 'left';
+}
+
+$alignment_class = 'is-horizontal-' . $horizontal_align;
+
 $wrapper_attributes = get_block_wrapper_attributes(
 	array(
-		'class' => 'nexdine-vapi-agent-trigger ' . $design_class,
+		'class' => 'nexdine-vapi-agent-trigger ' . $design_class . ' ' . $alignment_class,
 		'style' => sprintf('--nexdine-primary:%s;', esc_attr($primary_color)),
 	)
 );

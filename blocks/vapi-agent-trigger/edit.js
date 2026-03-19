@@ -1,7 +1,7 @@
 (function (wp) {
 	const { __ } = wp.i18n;
 	const { registerBlockType } = wp.blocks;
-	const { InspectorControls, useBlockProps } = wp.blockEditor;
+	const { BlockControls, InspectorControls, AlignmentToolbar, useBlockProps } = wp.blockEditor;
 	const { PanelBody, SelectControl, Notice } = wp.components;
 	const { useEffect } = wp.element;
 
@@ -15,16 +15,23 @@
 		neumorphic: 'is-design-neumorphic',
 	};
 
+	const alignmentClassMap = {
+		left: 'is-horizontal-left',
+		center: 'is-horizontal-center',
+		right: 'is-horizontal-right',
+	};
+
 	registerBlockType('nexdine/vapi-agent-trigger', {
 		edit: function Edit(props) {
 			const { attributes, setAttributes } = props;
-			const { assistantId, designVariation } = attributes;
+			const { assistantId, designVariation, horizontalAlign } = attributes;
 			const blockData = window.nexdineVapiBlockData || {};
 			const agents = Array.isArray(blockData.agents) ? blockData.agents : [];
 			const defaultAssistantId = blockData.defaultAssistantId || '';
 			const message = blockData.message || '';
 			const designClass = variationClassMap[designVariation] || variationClassMap.default;
-			const blockProps = useBlockProps({ className: `nexdine-vapi-agent-trigger ${designClass}` });
+			const alignClass = alignmentClassMap[horizontalAlign] || alignmentClassMap.left;
+			const blockProps = useBlockProps({ className: `nexdine-vapi-agent-trigger ${designClass} ${alignClass}` });
 
 			useEffect(
 				function setDefaultAgent() {
@@ -60,6 +67,16 @@
 				wp.element.createElement(
 					wp.element.Fragment,
 					null,
+					wp.element.createElement(
+						BlockControls,
+						null,
+						wp.element.createElement(AlignmentToolbar, {
+							value: horizontalAlign || 'left',
+							onChange: function onAlignChange(value) {
+								setAttributes({ horizontalAlign: value || 'left' });
+							},
+						})
+					),
 					wp.element.createElement(
 						InspectorControls,
 						null,
@@ -100,6 +117,23 @@
 								},
 								help: __('Choose a visual style for the trigger controls.', 'nexdine'),
 							})
+						),
+						wp.element.createElement(
+							PanelBody,
+							{ title: __('Layout', 'nexdine'), initialOpen: false },
+							wp.element.createElement(SelectControl, {
+								label: __('Horizontal Alignment', 'nexdine'),
+								value: horizontalAlign || 'left',
+								options: [
+									{ label: __('Left', 'nexdine'), value: 'left' },
+									{ label: __('Center', 'nexdine'), value: 'center' },
+									{ label: __('Right', 'nexdine'), value: 'right' },
+								],
+								onChange: function onSidebarAlignChange(value) {
+									setAttributes({ horizontalAlign: value || 'left' });
+								},
+								help: __('Also available in the block toolbar.', 'nexdine'),
+							})
 						)
 					),
 					wp.element.createElement(
@@ -121,9 +155,18 @@
 									: __('Select an agent in the sidebar to activate this block.', 'nexdine')
 							),
 							wp.element.createElement(
-								'button',
-								{ type: 'button', className: 'nexdine-vapi-agent-trigger__button is-online' },
-								__('Talk To Host', 'nexdine')
+								'div',
+								{ className: 'nexdine-vapi-agent-trigger__controls' },
+								wp.element.createElement(
+									'button',
+									{ type: 'button', className: 'nexdine-vapi-agent-trigger__button is-online' },
+									__('Talk To Host', 'nexdine')
+								),
+								wp.element.createElement(
+									'button',
+									{ type: 'button', className: 'nexdine-vapi-agent-trigger__end-button is-hidden' },
+									__('End Call', 'nexdine')
+								)
 							),
 							message
 								? wp.element.createElement(Notice, {

@@ -16,6 +16,10 @@
     "designVariation": {
       "type": "string",
       "default": "default"
+    },
+    "horizontalAlign": {
+      "type": "string",
+      "default": "left"
     }
   },
   "supports": {

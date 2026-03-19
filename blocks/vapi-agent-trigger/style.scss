@@ -61,6 +61,19 @@
     display: flex;
     flex-wrap: wrap;
     gap: var(--m3-density-control-gap);
+    justify-content: flex-start;
+  }
+
+  &.is-horizontal-left .nexdine-vapi-agent-trigger__controls {
+    justify-content: flex-start;
+  }
+
+  &.is-horizontal-center .nexdine-vapi-agent-trigger__controls {
+    justify-content: center;
+  }
+
+  &.is-horizontal-right .nexdine-vapi-agent-trigger__controls {
+    justify-content: flex-end;
   }
 
   .nexdine-vapi-agent-trigger__button,
@@ -317,6 +330,10 @@
       font-size: 0.9rem;
       min-height: var(--m3-density-button-min-height);
       width: 100%;
+    }
+
+    .nexdine-vapi-agent-trigger__controls {
+      justify-content: stretch;
     }
   }
 }
