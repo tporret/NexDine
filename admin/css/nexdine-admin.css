@@ -15,19 +15,23 @@
 	border-left-color: #d63638;
 }
 
-.nexdine-settings-wrap #nexdine-test-vapi-result {
+.nexdine-settings-wrap #nexdine-test-vapi-result,
+.nexdine-settings-wrap #nexdine-test-google-calendar-result {
 	margin-top: 10px;
 	font-weight: 600;
 }
 
-.nexdine-settings-wrap #nexdine-test-vapi-result.is-success {
+.nexdine-settings-wrap #nexdine-test-vapi-result.is-success,
+.nexdine-settings-wrap #nexdine-test-google-calendar-result.is-success {
 	color: #00a32a;
 }
 
-.nexdine-settings-wrap #nexdine-test-vapi-result.is-error {
+.nexdine-settings-wrap #nexdine-test-vapi-result.is-error,
+.nexdine-settings-wrap #nexdine-test-google-calendar-result.is-error {
 	color: #b32d2e;
 }
 
-.nexdine-settings-wrap #nexdine-test-vapi-result.is-pending {
+.nexdine-settings-wrap #nexdine-test-vapi-result.is-pending,
+.nexdine-settings-wrap #nexdine-test-google-calendar-result.is-pending {
 	color: #2271b1;
 }

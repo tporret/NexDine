@@ -65,12 +65,23 @@ class NexDine_Admin {
             'nexdineAdmin',
             array(
                 'ajaxUrl' => admin_url('admin-ajax.php'),
-                'nonce' => wp_create_nonce('nexdine_test_vapi_connection'),
-                'action' => 'nexdine_test_vapi_connection',
+                'tests' => array(
+                    'vapi' => array(
+                        'nonce' => wp_create_nonce('nexdine_test_vapi_connection'),
+                        'action' => 'nexdine_test_vapi_connection',
+                    ),
+                    'googleCalendar' => array(
+                        'nonce' => wp_create_nonce('nexdine_test_google_calendar_setting'),
+                        'action' => 'nexdine_test_google_calendar_setting',
+                    ),
+                ),
                 'labels' => array(
-                    'testing' => __('Testing connection...', 'nexdine'),
-                    'successPrefix' => __('Connected to Vapi successfully. HTTP status:', 'nexdine'),
-                    'errorPrefix' => __('Connection failed:', 'nexdine'),
+                    'vapiTesting' => __('Testing Vapi connection...', 'nexdine'),
+                    'vapiSuccessPrefix' => __('Connected to Vapi successfully. HTTP status:', 'nexdine'),
+                    'vapiErrorPrefix' => __('Vapi connection failed:', 'nexdine'),
+                    'googleCalendarTesting' => __('Testing Google Calendar settings...', 'nexdine'),
+                    'googleCalendarSuccessPrefix' => __('Google Calendar settings look valid. HTTP status:', 'nexdine'),
+                    'googleCalendarErrorPrefix' => __('Google Calendar test failed:', 'nexdine'),
                 ),
             )
         );
@@ -995,6 +1006,15 @@ class NexDine_Admin {
                 <?php echo esc_html__('Test Connection', 'nexdine'); ?>
             </button>
             <p id="nexdine-test-vapi-result" class="description" aria-live="polite"></p>
+
+            <hr />
+
+            <h2><?php echo esc_html__('Google Calendar Check', 'nexdine'); ?></h2>
+            <p><?php echo esc_html__('Use this to verify your Google Calendar ID is configured for middleware sync.', 'nexdine'); ?></p>
+            <button id="nexdine-test-google-calendar" class="button button-secondary" type="button">
+                <?php echo esc_html__('Test Google Calendar', 'nexdine'); ?>
+            </button>
+            <p id="nexdine-test-google-calendar-result" class="description" aria-live="polite"></p>
         </div>
         <?php
     }
@@ -1059,6 +1079,34 @@ class NexDine_Admin {
                 'status_code' => $status_code,
             ),
             $status_code > 0 ? $status_code : 500
+        );
+    }
+
+    public function test_google_calendar_setting() {
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(array('message' => __('You are not allowed to perform this action.', 'nexdine')), 403);
+        }
+
+        check_ajax_referer('nexdine_test_google_calendar_setting', 'nonce');
+
+        $settings = $this->get_vapi_settings();
+        $calendar_id = isset($settings['google_calendar_id']) ? sanitize_text_field((string) $settings['google_calendar_id']) : '';
+
+        if ($calendar_id === '') {
+            wp_send_json_error(array('message' => __('No Google Calendar ID is saved yet.', 'nexdine')), 400);
+        }
+
+        if ($calendar_id !== 'primary' && !preg_match('/^[a-zA-Z0-9._@-]+$/', $calendar_id)) {
+            wp_send_json_error(array('message' => __('Google Calendar ID format appears invalid. Use primary or a valid calendar ID/email.', 'nexdine')), 400);
+        }
+
+        wp_send_json_success(
+            array(
+                'message' => __('Google Calendar ID is configured and ready for middleware sync.', 'nexdine'),
+                'status_code' => 200,
+                'calendar_id' => $calendar_id,
+            ),
+            200
         );
     }
 

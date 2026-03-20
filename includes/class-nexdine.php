@@ -539,6 +539,7 @@ class NexDine {
         $this->loader->add_action('admin_menu', $plugin_admin, 'add_plugin_admin_menu');
         $this->loader->add_action('admin_init', $plugin_admin, 'register_vapi_settings');
         $this->loader->add_action('wp_ajax_nexdine_test_vapi_connection', $plugin_admin, 'test_vapi_connection');
+        $this->loader->add_action('wp_ajax_nexdine_test_google_calendar_setting', $plugin_admin, 'test_google_calendar_setting');
         $this->loader->add_action('admin_post_nexdine_sync_vapi_assistant', $plugin_admin, 'handle_sync_vapi_assistant');
     }
 
