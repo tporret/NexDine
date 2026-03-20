@@ -31,12 +31,82 @@ class NexDine {
         $this->define_admin_hooks();
         $this->define_public_hooks();
         $this->define_block_hooks();
+        $this->define_data_hooks();
     }
 
     private function define_block_hooks() {
         $this->loader->add_action('init', $this, 'register_blocks');
         $this->loader->add_action('rest_api_init', $this, 'register_rest_routes');
         $this->loader->add_action('enqueue_block_editor_assets', $this, 'enqueue_block_editor_data');
+    }
+
+    private function define_data_hooks() {
+        $this->loader->add_action('init', $this, 'register_vapi_reservation_post_type');
+        $this->loader->add_action('init', $this, 'register_vapi_reservation_meta');
+    }
+
+    public function register_vapi_reservation_post_type() {
+        $labels = array(
+            'name' => __('Vapi Reservations', 'nexdine'),
+            'singular_name' => __('Vapi Reservation', 'nexdine'),
+            'menu_name' => __('Vapi Reservations', 'nexdine'),
+            'add_new' => __('Add New', 'nexdine'),
+            'add_new_item' => __('Add New Reservation', 'nexdine'),
+            'edit_item' => __('Edit Reservation', 'nexdine'),
+            'new_item' => __('New Reservation', 'nexdine'),
+            'view_item' => __('View Reservation', 'nexdine'),
+            'search_items' => __('Search Reservations', 'nexdine'),
+            'not_found' => __('No reservations found.', 'nexdine'),
+            'not_found_in_trash' => __('No reservations found in Trash.', 'nexdine'),
+        );
+
+        register_post_type(
+            'vapi_reservation',
+            array(
+                'labels' => $labels,
+                'public' => false,
+                'show_ui' => true,
+                'show_in_menu' => true,
+                'show_in_rest' => true,
+                'rest_base' => 'vapi_reservation',
+                'rest_controller_class' => 'WP_REST_Posts_Controller',
+                'supports' => array('title', 'custom-fields'),
+                'capability_type' => 'post',
+                'map_meta_cap' => true,
+                'menu_icon' => 'dashicons-calendar-alt',
+            )
+        );
+    }
+
+    public function register_vapi_reservation_meta() {
+        $slot_meta_keys = array(
+            'party_size',
+            'date',
+            'time',
+            'seating_preference',
+            'occasion',
+            'notes',
+            'customer_name',
+            'phone',
+            'call_sid',
+        );
+
+        foreach ($slot_meta_keys as $meta_key) {
+            register_meta(
+                'post',
+                $meta_key,
+                array(
+                    'object_subtype' => 'vapi_reservation',
+                    'type' => 'string',
+                    'single' => true,
+                    'show_in_rest' => true,
+                    'sanitize_callback' => 'sanitize_text_field',
+                    'auth_callback' => function () {
+                        return current_user_can('edit_posts');
+                    },
+                )
+            );
+        }
     }
 
     public function register_rest_routes() {
@@ -469,6 +539,7 @@ class NexDine {
         $this->loader->add_action('admin_menu', $plugin_admin, 'add_plugin_admin_menu');
         $this->loader->add_action('admin_init', $plugin_admin, 'register_vapi_settings');
         $this->loader->add_action('wp_ajax_nexdine_test_vapi_connection', $plugin_admin, 'test_vapi_connection');
+        $this->loader->add_action('admin_post_nexdine_sync_vapi_assistant', $plugin_admin, 'handle_sync_vapi_assistant');
     }
 
     private function define_public_hooks() {
